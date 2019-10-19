@@ -32,6 +32,5 @@ with open('hack_ru.csv', newline='') as csvfile:
         #ignore first row with the titles
         dict = row
         pricing.insert_one(dict).inserted_id
-        break
 
 print("finished")
