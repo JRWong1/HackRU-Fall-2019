@@ -11,5 +11,10 @@ Model <- lm(price_per_100g_ml_dollars ~ ., data = TempData)
 ModelSummary <- summary(Model)
 ModelCoeffs <- ModelSummary$coefficients
 
+## creates number variables that describe unique number of each categorical variable
+numCountries <- length(unique(ColgateData$country))
+numCompanies <- length(unique(ColgateData$company))
+numIngredients <- length(TempData)-5
+  
 ##writes the coefficient data into 
 write.csv(ModelCoeffs, file = "Coeff.csv")
