@@ -3,12 +3,12 @@ import pprint
 import csv
 import re
 
-fields = ['', 'country', 'company', 'total_pack_size_ml_g', 'unit_pack_size_ml_g', 'price_per_100g_ml_dollars']
-
+fields = ['', 'country', 'company', 'total_pack_size_ml_g', 'unit_pack_size_ml_g', 'price_per_100g_ml_dollars', 'ingredients']
+calculated = ['predicted_price_per_100g_ml_dollars', 'difference_from_expected','predicted_total_price']
 
 
 coefficients = {}
-with open('Coeff2.csv', newline='') as csvfile:
+with open('TheOneThatTookLikeAnHour.csv', newline='') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         key = row[""]
@@ -23,10 +23,11 @@ prices = {}
 
 counter = 0
 count_errors = 0
+row_num = 0
 with open('hack_ru2.csv', newline='') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
-        sum = 2.43229775895001
+        sum = 2.48879979399772
         for thing in row.keys():
             key = thing.strip()
             if key == "":
@@ -40,35 +41,59 @@ with open('hack_ru2.csv', newline='') as csvfile:
                     weight = 0
                     if key == "total_pack_size_ml_g" or key == "unit_pack_size_ml_g" or key not in fields:
                         weight = float(coefficients[key])
-                        value = float(weight * float(row[key]))
-                        if row[key] == 1:
-                            print(row[key])
-                            count_errors += 1
+                        try:
+                            value = float(weight * float(row[key]))
+                        except ValueError:
+                            value = 0
                     else:
                         weight = float(coefficients[row[key]])
                         value = weight
-                    if key not in fields:
-                        value = value / 15
+                    
                     sum+=value
+            
             except KeyError:
-                if True:
-                    pass
-                else:
-                    #count_errors += 1
-                    pass
+                pass
+
+        row_num+=1
 
         difference = abs(sum - float(row['price_per_100g_ml_dollars']))
-        prices[str(counter)] = {'sum': sum, 'difference': difference}
+        try:
+            prices[str(counter)] = {'predicted_price_per_100g_ml_dollars': sum, 'difference_from_expected': difference, 'predicted_total_price': sum*float(row['total_pack_size_ml_g'])/100}
+        #Total pack size is NAN
+        except ValueError:
+            prices[str(counter)] = {'predicted_price_per_100g_ml_dollars': sum, 'difference_from_expected': difference, 'predicted_total_price': "NaN"}
         counter+=1
-        if counter > 30:
-            break
+        
 
+all_fields = fields + calculated
+'''
 for key, value in prices.items():
     print(key)
     print(value)
+'''
 
-print("ended with x errors x= ")
-print(count_errors)
+
+with open('hack_ru.csv', newline='') as csvfile:
+    with open('hack_ru copy.csv','w', newline='') as newfile:
+        reader = csv.DictReader(csvfile)
+        writer = csv.writer(newfile)
+        dict_writer = csv.DictWriter(newfile, fieldnames=all_fields)
+        counter = 0
+        for row in reader:
+            counter+=1
+            if counter == 1:
+                dict_writer.writeheader()
+            a = []
+            for key in row.keys():
+                a.append(row[key])
+            new_column = prices[str(counter - 1)]
+            for key in calculated:
+                a.append(new_column[key])
+
+            writer.writerow(a)
+            
+
+print('finished')
                 
 '''
 with open('hack_ru.csv', newline='') as csvfile:
